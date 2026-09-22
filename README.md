@@ -1,0 +1,48 @@
+# Attention
+
+PyTorch implementations of masked softmax, dot-product attention, additive attention, and an attention-based English-to-French sequence-to-sequence model.
+
+## Project structure
+
+- `src/attention.py` — dot-product and additive attention layers
+- `src/ops.py` — sequence masking and masked softmax
+- `src/mt/` — GRU encoder and attention decoder
+- `notebooks/Attention.ipynb` — attention mechanisms and visualizations
+- `notebooks/Ops.ipynb` — masking operations
+- `notebooks/machine_translation.ipynb` — data preparation, training, translation, attention heatmaps, and BLEU evaluation
+
+## Results
+
+| Model | Validation split | Decoding | Metric | Score |
+| --- | ---: | --- | --- | ---: |
+| GRU seq2seq with additive attention | 20% | Greedy | Corpus BLEU-4 | **38.02** |
+
+The score uses add-one smoothing and sequences truncated or padded to 20 tokens. It was produced by the latest notebook run and may vary because training and the data split are randomized.
+
+## Setup
+
+Python 3.11+ and [uv](https://docs.astral.sh/uv/) are required.
+
+```bash
+uv sync
+```
+
+The machine-translation notebook reuses `Vocab`, `MTData`, and data-loader utilities from a sibling `RNN` project. Keep both repositories under the same parent directory:
+
+```text
+ML/
+├── attention/
+└── RNN/
+```
+
+The French-English corpus is read from `RNN/notebooks/data` and downloaded there automatically if missing.
+
+## Usage
+
+Open a notebook in your preferred Jupyter-compatible editor and select the environment created at `.venv`.
+
+To verify the source and notebooks with BasedPyright:
+
+```bash
+uv run basedpyright
+```

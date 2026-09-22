@@ -1,0 +1,18 @@
+[project]
+name = "attention"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.11.2",
+    "torch>=2.14.0",
+]
+
+[tool.basedpyright]
+extraPaths = ["../RNN/src"]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+]
