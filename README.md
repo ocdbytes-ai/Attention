@@ -6,7 +6,7 @@ PyTorch implementations of masked softmax, dot-product attention, additive atten
 
 - `src/attention.py` — dot-product and additive attention layers
 - `src/ops.py` — sequence masking and masked softmax
-- `src/mt/` — translation data pipeline, GRU encoder, and attention decoder
+- `src/mt/` — translation data pipeline, bidirectional GRU encoder, and attention decoder
 - `notebooks/Attention.ipynb` — attention mechanisms and visualizations
 - `notebooks/Ops.ipynb` — masking operations
 - `notebooks/machine_translation.ipynb` — data preparation, training, translation, attention heatmaps, and BLEU evaluation
@@ -15,9 +15,9 @@ PyTorch implementations of masked softmax, dot-product attention, additive atten
 
 | Model | Validation split | Decoding | Metric | Score |
 | --- | ---: | --- | --- | ---: |
-| GRU seq2seq with additive attention | 20% | Greedy | Corpus BLEU-4 | **38.02** |
+| Unidirectional GRU baseline with additive attention | 20% | Greedy | Corpus BLEU-4 | **38.02** |
 
-The score uses add-one smoothing and sequences truncated or padded to 20 tokens. It was produced by the latest notebook run and may vary because training and the data split are randomized.
+The baseline score uses add-one smoothing and sequences truncated or padded to 20 tokens. Retrain the bidirectional model to measure its result.
 
 ## Setup
 

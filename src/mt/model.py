@@ -31,16 +31,19 @@ class Seq2SeqInputs:
 class Seq2SeqEncoder(Encoder):
     def __init__(self, inputs: Seq2SeqInputs):
         super().__init__()
+        if inputs.hidden_size % 2:
+            raise ValueError("hidden_size must be even for a bidirectional encoder")
         self.inputs: Seq2SeqInputs = inputs
         self.embedding: nn.Embedding = nn.Embedding(
             inputs.vocab_size, inputs.embedding_size
         )
         self.gru: nn.GRU = nn.GRU(
             inputs.embedding_size,
-            inputs.hidden_size,
+            inputs.hidden_size // 2,
             num_layers=inputs.num_layers,
             dropout=inputs.dropout,
             batch_first=True,
+            bidirectional=True,
         )
         _ = self.apply(init_weights)
 
@@ -50,26 +53,31 @@ class Seq2SeqEncoder(Encoder):
     ) -> EncoderState:
         embeddings = cast(torch.Tensor, self.embedding(x.long()))
         if valid_lengths is None:
-            return cast(EncoderState, self.gru(embeddings))
+            outputs, state = cast(
+                tuple[torch.Tensor, torch.Tensor], self.gru(embeddings)
+            )
+        else:
+            # Ignore padding while encoding each direction.
+            packed = pack_padded_sequence(
+                embeddings,
+                valid_lengths.cpu(),
+                batch_first=True,
+                enforce_sorted=False,
+            )
+            packed_outputs, state = cast(
+                tuple[PackedSequence, torch.Tensor], self.gru(packed)
+            )
+            outputs, _ = pad_packed_sequence(
+                packed_outputs,
+                batch_first=True,
+                total_length=x.shape[1],
+            )
 
-        # Here I am using packed padded sequence
-        # because I dont want my model to consider
-        # the padded tokens' context.
-        packed = pack_padded_sequence(
-            embeddings,
-            valid_lengths.cpu(),
-            batch_first=True,
-            enforce_sorted=False,
+        # Join each layer's forward and backward states for the decoder.
+        state = state.reshape(
+            self.inputs.num_layers, 2, state.shape[1], state.shape[2]
         )
-        packed_outputs, state = cast(
-            tuple[PackedSequence, torch.Tensor], self.gru(packed)
-        )
-        outputs, _ = pad_packed_sequence(
-            packed_outputs,
-            batch_first=True,
-            total_length=x.shape[1],
-        )
-        return outputs, state
+        return outputs, torch.cat((state[:, 0], state[:, 1]), dim=-1)
 
 
 @dataclass
@@ -102,10 +110,10 @@ class Seq2SeqAttentionDecoder(AttentionDecoder):
     def init_state(
         self, encoder_outputs: EncoderState, encoder_valid_lens: torch.Tensor
     ) -> DecoderState:
-        # Shape of outputs: (num_steps, batch_size, num_hiddens).
+        # Shape of outputs: (batch_size, num_steps, num_hiddens).
         # Shape of hidden_state: (num_layers, batch_size, num_hiddens)
         outputs, hidden_state = encoder_outputs
-        return (outputs.permute(0, 1, 2), hidden_state, encoder_valid_lens)
+        return (outputs, hidden_state, encoder_valid_lens)
 
     @override
     def forward(
