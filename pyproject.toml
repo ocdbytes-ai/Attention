@@ -9,9 +9,6 @@ dependencies = [
     "torch>=2.14.0",
 ]
 
-[tool.basedpyright]
-extraPaths = ["../RNN/src"]
-
 [dependency-groups]
 dev = [
     "ipykernel>=7.3.0",

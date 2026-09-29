@@ -6,7 +6,7 @@ PyTorch implementations of masked softmax, dot-product attention, additive atten
 
 - `src/attention.py` — dot-product and additive attention layers
 - `src/ops.py` — sequence masking and masked softmax
-- `src/mt/` — GRU encoder and attention decoder
+- `src/mt/` — translation data pipeline, GRU encoder, and attention decoder
 - `notebooks/Attention.ipynb` — attention mechanisms and visualizations
 - `notebooks/Ops.ipynb` — masking operations
 - `notebooks/machine_translation.ipynb` — data preparation, training, translation, attention heatmaps, and BLEU evaluation
@@ -27,15 +27,7 @@ Python 3.11+ and [uv](https://docs.astral.sh/uv/) are required.
 uv sync
 ```
 
-The machine-translation notebook reuses `Vocab`, `MTData`, and data-loader utilities from a sibling `RNN` project. Keep both repositories under the same parent directory:
-
-```text
-ML/
-├── attention/
-└── RNN/
-```
-
-The French-English corpus is read from `RNN/notebooks/data` and downloaded there automatically if missing.
+The machine-translation notebook downloads and caches the French-English corpus under `notebooks/data` automatically.
 
 ## Usage
 

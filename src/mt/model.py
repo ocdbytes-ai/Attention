@@ -81,9 +81,6 @@ class Seq2SeqAttentionDecoderInputs:
     dropout: float = 0.0
 
 
-Seq2SeqAttentionDecoderState = tuple[torch.Tensor, torch.Tensor, torch.Tensor]
-
-
 class Seq2SeqAttentionDecoder(AttentionDecoder):
     def __init__(self, inputs: Seq2SeqAttentionDecoderInputs) -> None:
         super().__init__()
@@ -104,7 +101,7 @@ class Seq2SeqAttentionDecoder(AttentionDecoder):
     @override
     def init_state(
         self, encoder_outputs: EncoderState, encoder_valid_lens: torch.Tensor
-    ) -> Seq2SeqAttentionDecoderState:
+    ) -> DecoderState:
         # Shape of outputs: (num_steps, batch_size, num_hiddens).
         # Shape of hidden_state: (num_layers, batch_size, num_hiddens)
         outputs, hidden_state = encoder_outputs
@@ -127,13 +124,9 @@ class Seq2SeqAttentionDecoder(AttentionDecoder):
             # Shape of context: (batch_size, 1, num_hiddens)
             context = self.attention(query, enc_outputs, enc_outputs, enc_valid_lens)
             # Concatenate on the feature dimension
-            embedding = torch.cat(
-                (context, torch.unsqueeze(embedding, dim=1)), dim=-1
-            )
+            embedding = torch.cat((context, torch.unsqueeze(embedding, dim=1)), dim=-1)
             # Reshape embedding as (1, batch_size, embed_size + num_hiddens)
-            out, hidden_state = self.rnn(
-                embedding.permute(1, 0, 2), hidden_state
-            )
+            out, hidden_state = self.rnn(embedding.permute(1, 0, 2), hidden_state)
             outputs.append(out)
             self._attention_weights.append(self.attention.attention_weights)
         # After fully connected layer transformation, shape of outputs:
